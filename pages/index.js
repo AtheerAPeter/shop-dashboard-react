@@ -34,7 +34,7 @@ const Home = () => {
     };
 
     fetch(
-      "https://api.imgbb.com/1/upload?key=7bcfad647ce27bcb52f097ea42f14275",
+      "https://api.imgbb.com/1/upload?key=YOUR IMGBB API KEY",
       requestOptions
     )
       .then((response) => response.json())
@@ -48,7 +48,7 @@ const Home = () => {
           category: selected,
           description: text,
         });
-        fetch("https://fikracamps-shop-atheer.herokuapp.com/v1/upload", {
+        fetch("YOUR /upload LINK", {
           method: "POST",
           headers: myHeaders,
           body: raw,
