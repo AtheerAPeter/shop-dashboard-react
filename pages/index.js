@@ -1,65 +1,137 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { Row, Col, Input, Button } from "antd";
+import { useState } from "react";
+import { PlusCircleOutlined } from "@ant-design/icons";
+//components
+import Category from "../components/category";
+import ImageUpload from "../components/imageUpload";
+const Home = () => {
+  const [fileList, setFileList] = useState([]);
+  const [text, setText] = useState("");
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState([]);
+  const [price, setPrice] = useState("");
+  const [selected, setSelected] = useState([]);
 
-export default function Home() {
+  var ReactQuill;
+  if (typeof window !== "undefined") {
+    ReactQuill = require("react-quill");
+  }
+
+  const handleAddProduct = async () => {
+    var formdata = new FormData();
+    formdata.append(
+      "image",
+      fileList[0].originFileObj,
+      fileList[0].originFileObj.name
+    );
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var requestOptions = {
+      method: "POST",
+      body: formdata,
+      redirect: "follow",
+    };
+
+    fetch(
+      "https://api.imgbb.com/1/upload?key=7bcfad647ce27bcb52f097ea42f14275",
+      requestOptions
+    )
+      .then((response) => response.json())
+      .then((result) => {
+        console.log(result.data.display_url);
+
+        let raw = JSON.stringify({
+          name,
+          price,
+          image: result.data.display_url,
+          category: selected,
+          description: text,
+        });
+        fetch("https://fikracamps-shop-atheer.herokuapp.com/v1/upload", {
+          method: "POST",
+          headers: myHeaders,
+          body: raw,
+          redirect: "follow",
+        })
+          .then((response) => response.text())
+          .then((result) => console.log(JSON.parse(result)))
+          .catch((error) => console.log("error", error));
+      })
+      .catch((error) => console.log("error", error));
+  };
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <>
+      <div className="container">
+        <Row gutter={[10, 20]}>
+          <Col span={16}>
+            <h1>Add a product</h1>
+          </Col>
+          <Col span={8}>
+            <Button
+              disabled={
+                fileList.length > 0 && text && name && selected && price
+                  ? false
+                  : true
+              }
+              onClick={handleAddProduct}
+              type="primary"
+              icon={<PlusCircleOutlined />}
+              style={{ width: "100%" }}
+            >
+              Add
+            </Button>
+          </Col>
+        </Row>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+        <Row gutter={[10, 20]}>
+          <Col style={{ margin: "auto" }} span={24}>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Product name"
+            />
+          </Col>
+        </Row>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+        <Row gutter={[10, 20]}>
+          <Col xs={24} sm={24} md={12} lg={12}>
+            <Input
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              prefix="🇮🇶"
+              suffix="IQD"
+              type="number"
+              placeholder="Price"
+            />
+          </Col>
+          <Col style={{ margin: "auto" }} xs={24} sm={24} md={12} lg={12}>
+            <Category
+              style={{ width: "100%" }}
+              category={category}
+              setCategory={setCategory}
+              selected={selected}
+              setSelected={setSelected}
+            />
+          </Col>
+        </Row>
+        <Col span={24}>
+          <ImageUpload setFileList={setFileList} fileList={fileList} />
+        </Col>
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+        <Col span={24}>
+          {ReactQuill && (
+            <ReactQuill
+              theme="snow"
+              value={text}
+              onChange={(value) => setText(value)}
+              placeholder="Description"
+            />
+          )}
+        </Col>
+      </div>
+    </>
+  );
+};
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
-}
+export default Home;
